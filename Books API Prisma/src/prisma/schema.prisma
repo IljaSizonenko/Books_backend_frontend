@@ -1,0 +1,100 @@
+// This is a Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas = ["books_api"]
+}
+
+//
+// BOOK (N:1 Author, N:1 Publisher, N:M Genres, 1:N Reviews)
+//
+model Book {
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(255)
+  isbn String @unique @db.VarChar(50)
+  publishedYear Int
+  pageCount Int
+  language String @db.VarChar(50)
+  description String
+  coverImage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Relations
+  authorId Int
+  publisherId Int
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  genres Genre[] @relation("BooksGenres")
+  reviews Review[]
+  @@schema("books_api")
+  @@index([title])
+  @@index([language])
+  @@index([publishedYear])
+}
+
+//
+//AUTHOR (1:N Books)
+//
+model Author {
+  id  Int @id @default(autoincrement())
+  firstName String  @db.VarChar(100)
+  lastName  String  @db.VarChar(100)
+  birthYear Int
+  nationality String
+  biography String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  books Book[]
+  @@schema("books_api")
+  @@index([lastName])
+  @@index([nationality])
+}
+//
+// PUBLISHER (1:N Books)
+//
+model Publisher {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  country String @db.VarChar(100)
+  foundedYear Int
+  website String?
+  createdAt DateTime  @default(now())
+  books       Book[]
+  @@schema("books_api")
+  @@index([name])
+  @@index([country])
+}
+
+//
+//GENRE (N:M Books)
+//
+model Genre {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  books Book[] @relation("BooksGenres")
+  @@schema("books_api")
+}
+
+//
+// REVIEW (N:1 Book)
+//
+model Review {
+  id Int @id @default(autoincrement())
+  bookId Int
+  userName String @db.VarChar(100)
+  rating Int
+  comment String
+  createdAt DateTime @default(now())
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  @@schema("books_api")
+  @@index([rating])
+}
