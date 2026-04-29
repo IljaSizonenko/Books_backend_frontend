@@ -1,17 +1,15 @@
 import { reviews } from "../data/mock/Reviews.mock.faker.js";
 import { books } from "../data/mock/Books.mock.faker.js";
 import { Review } from "../models/review.model.js";
+import { NotFoundError } from "../middleware/notfounderror.middleware.js";
 
 export class ReviewService {
     private static findBookOrThrow(bookId: number) {
         const book = books.find(b => b.id === bookId);
         if (!book) {
-            throw {
-                status: 404,
-                message: "Book not found",
-                details: []
-            };
+            throw new NotFoundError("Book not found");
         }
+        return book;
     }
     static getByBook(bookId: number): Review[] {
         this.findBookOrThrow(bookId);

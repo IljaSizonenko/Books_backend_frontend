@@ -1,6 +1,7 @@
 import { books } from "../data/mock/Books.mock.faker.js";
 import { Book } from "../models/book.model.js";
 import { sortByField } from "../utils/sort.utils.js";
+import { NotFoundError } from "../middleware/notfounderror.middleware.js";
 
 export interface BookQuery {
     title?: string;
@@ -15,6 +16,13 @@ export interface BookQuery {
 }
 
 export class BookService {
+    private static findBookOrThrow(id: number): Book {
+        const book = books.find(b => b.id === id);
+        if (!book) {
+            throw new NotFoundError("Book not found");
+        }
+        return book;
+    }
     static getAll(query: BookQuery) {
         let result = [...books];
         if (query.title) {
@@ -51,15 +59,7 @@ export class BookService {
         };
     }
     static getById(id: number): Book {
-        const book = books.find(b => b.id === id);
-        if (!book) {
-            throw {
-                status: 404,
-                message: "Book not found",
-                details: []
-            };
-        }
-        return book;
+        return this.findBookOrThrow(id)
     }
     static create(data: Omit<Book, "id" | "createdAt" | "updatedAt">): Book {
         const newBook: Book = {
@@ -73,7 +73,7 @@ export class BookService {
         return newBook;
     }
     static update(id: number, data: Partial<Omit<Book, "id">>): Book {
-        const book = this.getById(id);
+        const book = this.findBookOrThrow(id);
         const updated: Book = {
             ...book,
             ...data,
@@ -85,14 +85,8 @@ export class BookService {
         return updated;
     }
     static delete(id: number): void {
+        this.findBookOrThrow(id);
         const index = books.findIndex(b => b.id === id);
-        if (index === -1) {
-            throw {
-                status: 404,
-                message: "Book not found",
-                details: []
-            };
-        }
         books.splice(index, 1);
     }
 }
