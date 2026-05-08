@@ -4,7 +4,7 @@ const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Book API Mock",
+      title: "Book API PostgreSQL",
       version: "1.0.0",
       description: "API documentation for Book API with PostgreSQL data",
     },

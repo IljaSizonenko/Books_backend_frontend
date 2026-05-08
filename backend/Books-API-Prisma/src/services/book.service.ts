@@ -5,57 +5,7 @@ import { getPagination, buildPaginationMeta } from "../utils/pagination.utils";
 import { getSortOptions } from "../utils/sort.utils";
 
 export class BookService {
-    static async getAllBooks(query: any) {
-    const { page, limit, skip, take } = getPagination(query.page, query.limit);
-    const where: any = {};
-    if (query.title) {
-        where.title = prismaContains(query.title);
-    }
-    if (query.language) {
-        where.language = prismaEquals(query.language);
-    }
-    if (query.year) {
-        const year = Number(query.year);
-        if (!isNaN(year)) {
-            where.publishedYear = prismaEquals(year);
-        }
-    }
-    if (query.author) {
-        where.author = {
-            OR: [
-                { firstName: prismaContains(query.author) },
-                { lastName: prismaContains(query.author) }
-            ]
-        };
-    }
-    if (query.genre) {
-        where.genres = { some: { name: prismaContains(query.genre) } };
-    }
-    if (query.publisher) {
-        where.publisher = { name: prismaContains(query.publisher) };
-    }
-    const orderBy = getSortOptions(query.sortBy, query.order);
-    const [totalItems, books] = await Promise.all([
-        prisma.book.count({ where }),
-        prisma.book.findMany({
-            where,
-            include: {
-                author: true,
-                publisher: true,
-                genres: true,
-                reviews: true,
-            },
-            orderBy,
-            skip,
-            take
-        })
-    ]);
-    return {
-        data: books,
-        pagination: buildPaginationMeta(totalItems, page, limit)
-    };
-}
-    static async getBookById(id: number) {
+    private static async findBookOrThrow(id: number) {
         const book = await prisma.book.findUnique({
             where: { id },
             include: {
@@ -69,6 +19,59 @@ export class BookService {
             throw new NotFoundError("Book not found");
         }
         return book;
+    }
+    static async getAllBooks(query: any) {
+        const { page, limit, skip, take } = getPagination(query.page, query.limit);
+        const where: any = {};
+        if (query.title) {
+            where.title = prismaContains(query.title);
+        }
+        if (query.language) {
+            where.language = prismaEquals(query.language);
+        }
+        if (query.year) {
+            const year = Number(query.year);
+            if (!isNaN(year)) {
+                where.publishedYear = prismaEquals(year);
+            }
+        }
+        if (query.author) {
+            where.author = {
+                OR: [
+                    { firstName: prismaContains(query.author) },
+                    { lastName: prismaContains(query.author) }
+                ]
+            };
+        }
+        if (query.genre) {
+            where.genres = { some: { name: prismaContains(query.genre) } };
+        }
+        if (query.publisher) {
+            where.publisher = { name: prismaContains(query.publisher) };
+        }
+        const orderBy = getSortOptions(query.sortBy, query.order);
+        const [totalItems, books] = await Promise.all([
+            prisma.book.count({ where }),
+            prisma.book.findMany({
+                where,
+                include: {
+                    author: true,
+                    publisher: true,
+                    genres: true,
+                    reviews: true,
+                },
+                orderBy,
+                skip,
+                take
+            })
+        ]);
+        return {
+            data: books,
+            pagination: buildPaginationMeta(totalItems, page, limit)
+        };
+    }
+    static async getBookById(id: number) {
+        return this.findBookOrThrow(id);
     }
     static async createBook(data: {
         title: string;

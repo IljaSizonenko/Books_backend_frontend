@@ -1,6 +1,14 @@
 import { books } from "../data/mock/Books.mock.faker.js";
 import { sortByField } from "../utils/sort.utils.js";
+import { NotFoundError } from "../middleware/notfounderror.middleware.js";
 export class BookService {
+    static findBookOrThrow(id) {
+        const book = books.find(b => b.id === id);
+        if (!book) {
+            throw new NotFoundError("Book not found");
+        }
+        return book;
+    }
     static getAll(query) {
         let result = [...books];
         if (query.title) {
@@ -33,15 +41,7 @@ export class BookService {
         };
     }
     static getById(id) {
-        const book = books.find(b => b.id === id);
-        if (!book) {
-            throw {
-                status: 404,
-                message: "Book not found",
-                details: []
-            };
-        }
-        return book;
+        return this.findBookOrThrow(id);
     }
     static create(data) {
         const newBook = {
@@ -54,7 +54,7 @@ export class BookService {
         return newBook;
     }
     static update(id, data) {
-        const book = this.getById(id);
+        const book = this.findBookOrThrow(id);
         const updated = {
             ...book,
             ...data,
@@ -65,14 +65,8 @@ export class BookService {
         return updated;
     }
     static delete(id) {
+        this.findBookOrThrow(id);
         const index = books.findIndex(b => b.id === id);
-        if (index === -1) {
-            throw {
-                status: 404,
-                message: "Book not found",
-                details: []
-            };
-        }
         books.splice(index, 1);
     }
 }
