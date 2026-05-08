@@ -24,9 +24,6 @@ export default function AddBookPage() {
         pageCount: Number(pageCount),
         language,
         description,
-        authorId: 1,
-        publisherId: 1,
-        genreIds: [],
       });
       navigate("/books");
     } catch {
@@ -38,7 +35,7 @@ export default function AddBookPage() {
   return (
     <div className="p-4 space-y-4">
       <Link to="/books" className="text-blue-600 hover:underline">
-        ← Back to list
+        Back to list
       </Link>
       <h1 className="text-2xl font-bold">Add new book</h1>
       {error && <div className="text-red-500">{error}</div>}

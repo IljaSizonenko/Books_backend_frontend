@@ -20,19 +20,22 @@ export default function EditBookPage() {
   useEffect(() => {
     if (!id) return;
     const controller = new AbortController();
-    getBook(id)
-      .then((data) => {
+    (async () => {
+      try {
+        const data = await getBook(id);
         setBook(data);
-        // Pre-fill form
         setTitle(data.title);
         setIsbn(data.isbn);
         setPublishedYear(String(data.publishedYear));
         setPageCount(String(data.pageCount));
         setLanguage(data.language);
         setDescription(data.description);
-      })
-      .catch(() => setError("Failed to load book"))
-      .finally(() => setLoading(false));
+      } catch {
+        setError("Failed to load book");
+      } finally {
+        setLoading(false);
+      }
+    })();
     return () => controller.abort();
   }, [id]);
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,9 +51,6 @@ export default function EditBookPage() {
         pageCount: Number(pageCount),
         language,
         description,
-        authorId: book?.authorId ?? 1,
-        publisherId: book?.publisherId ?? 1,
-        genreIds: book?.genreIds ?? [],
       });
       navigate(`/books/${id}`);
     } catch {
@@ -65,10 +65,9 @@ export default function EditBookPage() {
   return (
     <div className="p-4 space-y-4">
       <Link to={`/books/${id}`} className="text-blue-600 hover:underline">
-         Back to details
+        Back to details
       </Link>
       <h1 className="text-2xl font-bold">Edit book</h1>
-      {error && <div className="text-red-500">{error}</div>}
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <input
           className="border p-2 w-full"

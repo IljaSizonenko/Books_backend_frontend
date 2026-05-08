@@ -21,3 +21,31 @@ export interface Review {
     comment: string;
     createdAt: string;
 }
+export interface BooksQueryParams {
+  title?: string;
+  year?: number;
+  language?: string;
+  sortBy?: string;
+  order?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+type PrismaBooksResponse = {
+  success: true;
+  data: Book[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+};
+
+type MockBooksResponse = {
+  page: number;
+  limit: number;
+  total: number;
+  data: Book[];
+};
+
+export type BooksApiResponse = PrismaBooksResponse | MockBooksResponse;
