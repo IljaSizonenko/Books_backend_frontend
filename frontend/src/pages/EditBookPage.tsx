@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { getBook, updateBook } from "../api/api";
-import type { Book } from "../api/types";
+import { getBook, updateBook } from "../api/api.js";
+import type { Book } from "../api/types.js";
 
 export default function EditBookPage() {
   const { id } = useParams();

@@ -6,9 +6,9 @@ import {
   getAverageRating,
   deleteBook,
   createReview
-} from "../api/api";
-import type { Book, Review } from "../api/types";
-import ReviewForm from "../components/ReviewForm";
+} from "../api/api.js";
+import type { Book, Review } from "../api/types.js";
+import ReviewForm from "../components/ReviewForm.js";
 
 
 export default function BookDetailPage() {

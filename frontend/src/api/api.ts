@@ -1,12 +1,26 @@
 import axios from "axios";
-import type { Book, Review } from "./types";
+import type { Book, Review } from "./types.js";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 // GET all books
-export const getBooks = async (signal?: AbortSignal) => {
-  const res = await api.get<Book[]>("/books", { signal });
+export const getBooks = async (
+  params?: {
+    title?: string;
+    year?: number;
+    language?: string;
+    sortBy?: string;
+    order?: "asc" | "desc";
+    page?: number;
+    limit?: number;
+  },
+  signal?: AbortSignal
+) => {
+  const res = await api.get("/books", {
+    params,
+    signal,
+  });
   return res.data;
 };
 // GET one book
