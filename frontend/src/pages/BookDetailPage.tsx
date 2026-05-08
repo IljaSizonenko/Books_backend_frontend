@@ -5,8 +5,11 @@ import {
   getReviews,
   getAverageRating,
   deleteBook,
+  createReview
 } from "../api/api";
 import type { Book, Review } from "../api/types";
+import ReviewForm from "../components/ReviewForm";
+
 
 export default function BookDetailPage() {
   const { id } = useParams();
@@ -34,6 +37,18 @@ export default function BookDetailPage() {
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [id]);
+  const handleAddReview = async (data: {
+    userName: string;
+    rating: number;
+    comment: string;
+  }) => {
+    if (!id) return;
+    await createReview(id, data);
+    const updatedReviews = await getReviews(id);
+    setReviews(updatedReviews);
+    const updatedRating = await getAverageRating(id);
+    setRating(updatedRating);
+  };
   const handleDelete = async () => {
     if (!id) return;
     if (!confirm("Are you sure you want to delete this book?")) return;
@@ -100,6 +115,10 @@ export default function BookDetailPage() {
             </li>
           ))}
         </ul>
+      </div>
+      {/* Create Review */}
+      <div className="mt-6">
+        <ReviewForm onSubmit={handleAddReview} />
       </div>
     </div>
   );

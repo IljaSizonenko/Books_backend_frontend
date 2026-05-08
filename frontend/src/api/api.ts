@@ -38,3 +38,11 @@ export const getAverageRating = async (id: string) => {
 export const deleteBook = async (id: string) => {
   await api.delete(`/books/${id}`);
 };
+// POST create review
+export const createReview = async (
+  bookId: string,
+  data: { userName: string; rating: number; comment: string }
+) => {
+  const res = await api.post(`/books/${bookId}/reviews`, data);
+  return res.data;
+};
