@@ -10,6 +10,7 @@ export default function AddBookPage() {
   const [pageCount, setPageCount] = useState("");
   const [language, setLanguage] = useState("");
   const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,9 +25,13 @@ export default function AddBookPage() {
         pageCount: Number(pageCount),
         language,
         description,
+        coverImage: coverImage || "",
+        authorId: 1,
+        genreIds: [1],
       });
       navigate("/books");
-    } catch {
+    } catch (err) {
+      console.error("CREATE ERROR:", err);
       setError("Failed to create book");
     } finally {
       setLoading(false);
@@ -80,6 +85,12 @@ export default function AddBookPage() {
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+        />
+        <input
+          className="border p-2 w-full"
+          placeholder="Cover image URL"
+          value={coverImage}
+          onChange={(e) => setCoverImage(e.target.value)}
         />
         <button
           type="submit"

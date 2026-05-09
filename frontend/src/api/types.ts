@@ -23,29 +23,27 @@ export interface Review {
 }
 export interface BooksQueryParams {
   title?: string;
-  year?: number;
+  publishedYear?: number;
   language?: string;
-  sortBy?: string;
+  sort?: string;
   order?: "asc" | "desc";
   page?: number;
   limit?: number;
 }
 
-type PrismaBooksResponse = {
-  success: true;
-  data: Book[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-};
-
-type MockBooksResponse = {
-  page: number;
-  limit: number;
-  total: number;
-  data: Book[];
-};
-
-export type BooksApiResponse = PrismaBooksResponse | MockBooksResponse;
+export type BooksApiResponse =
+  | {
+      success: true;
+      data: Book[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+      };
+    }
+  | {
+      page: number;
+      limit: number;
+      total: number;
+      data: Book[];
+    };

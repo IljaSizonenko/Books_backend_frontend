@@ -10,7 +10,6 @@ import {
 import type { Book, Review } from "../api/types.js";
 import ReviewForm from "../components/ReviewForm.js";
 
-
 export default function BookDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,21 +21,30 @@ export default function BookDetailPage() {
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     if (!id) return;
-    const controller = new AbortController();
-    Promise.all([
-      getBook(id),
-      getReviews(id),
-      getAverageRating(id),
-    ])
-      .then(([bookData, reviewsData, ratingData]) => {
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const [bookData, reviewsData, ratingData] = await Promise.all([
+          getBook(id),
+          getReviews(id),
+          getAverageRating(id),
+        ]);
         setBook(bookData);
         setReviews(reviewsData);
-        setRating(ratingData);
-      })
-      .catch(() => setError("Unable to load book details"))
-      .finally(() => setLoading(false));
-    return () => controller.abort();
+        setRating(ratingData?.averageRating ?? null); // ⭐ FIX
+      } catch (err) {
+        console.error("DETAIL ERROR:", err);
+        setError("Unable to load book details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [id]);
+  if (!id) {
+    return <div className="p-4 text-red-500">Invalid book ID</div>;
+  }
   const handleAddReview = async (data: {
     userName: string;
     rating: number;
@@ -47,7 +55,7 @@ export default function BookDetailPage() {
     const updatedReviews = await getReviews(id);
     setReviews(updatedReviews);
     const updatedRating = await getAverageRating(id);
-    setRating(updatedRating);
+    setRating(updatedRating?.averageRating ?? null); // ⭐ FIX
   };
   const handleDelete = async () => {
     if (!id) return;
@@ -67,13 +75,10 @@ export default function BookDetailPage() {
   if (!book) return <div className="p-4">Book not found</div>;
   return (
     <div className="p-4 space-y-6">
-      {/* Back button */}
       <Link to="/books" className="text-blue-600 hover:underline">
         Back to list
       </Link>
-      {/* Title */}
       <h1 className="text-2xl font-bold">{book.title}</h1>
-      {/* Action buttons */}
       <div className="space-x-4">
         <Link
           to={`/books/${id}/edit`}
@@ -89,7 +94,6 @@ export default function BookDetailPage() {
           {deleting ? "Deleting..." : "Delete"}
         </button>
       </div>
-      {/* Book details */}
       <div className="text-gray-700 space-y-1">
         <p><strong>ISBN:</strong> {book.isbn}</p>
         <p><strong>Year:</strong> {book.publishedYear}</p>
@@ -97,12 +101,10 @@ export default function BookDetailPage() {
         <p><strong>Language:</strong> {book.language}</p>
         <p><strong>Description:</strong> {book.description}</p>
       </div>
-      {/* Average rating */}
       <div>
         <h2 className="text-xl font-semibold">Average rating</h2>
         <p>{rating ?? "No rating yet"}</p>
       </div>
-      {/* Reviews */}
       <div>
         <h2 className="text-xl font-semibold">Reviews</h2>
         {reviews.length === 0 && <p>No reviews yet</p>}
@@ -116,7 +118,6 @@ export default function BookDetailPage() {
           ))}
         </ul>
       </div>
-      {/* Create Review */}
       <div className="mt-6">
         <ReviewForm onSubmit={handleAddReview} />
       </div>

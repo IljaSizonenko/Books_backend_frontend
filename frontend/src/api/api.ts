@@ -3,9 +3,9 @@ import type { Book, BooksApiResponse } from "./types.js";
 
 export interface BooksQueryParams {
   title?: string;
-  year?: number;
+  publishedYear?: number;
   language?: string;
-  sortBy?: string;
+  sort?: string;
   order?: "asc" | "desc";
   page?: number;
   limit?: number;
@@ -14,26 +14,35 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 // GET all books
-export const getBooks = async (
-  params?: BooksQueryParams,
-  signal?: AbortSignal
-) => {
+export const getBooks = async (params?: BooksQueryParams, signal?: AbortSignal) => {
   const res = await api.get<BooksApiResponse>("/books", { params, signal });
   const raw = res.data;
-  if ("success" in raw) {
+  // Prisma format
+  if (raw && typeof raw === "object" && "success" in raw) {
     return {
       books: raw.data,
       pagination: raw.pagination,
     };
   }
-  return {
-    books: raw.data,
-    pagination: {
-      page: raw.page,
-      limit: raw.limit,
-      total: raw.total,
-    },
-  };
+  // Mock format
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "data" in raw &&
+    "page" in raw &&
+    "limit" in raw &&
+    "total" in raw
+  ) {
+    return {
+      books: raw.data,
+      pagination: {
+        page: raw.page,
+        limit: raw.limit,
+        total: raw.total,
+      },
+    };
+  }
+  throw new Error("Unknown API response format");
 };
 // GET one book
 export const getBook = async (id: string) => {
