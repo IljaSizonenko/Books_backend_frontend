@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { getBook, updateBook } from "../api/api.js";
-import type { Book } from "../api/types.js";
+import type { UnifiedBookDetail } from "../api/types.js";
 
 export default function EditBookPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [book, setBook] = useState<Book | null>(null);
+  const [book, setBook] = useState<UnifiedBookDetail | null>(null);
   const [title, setTitle] = useState("");
   const [isbn, setIsbn] = useState("");
   const [publishedYear, setPublishedYear] = useState("");
@@ -16,10 +16,8 @@ export default function EditBookPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  // Load book data
   useEffect(() => {
     if (!id) return;
-    const controller = new AbortController();
     (async () => {
       try {
         const data = await getBook(id);
@@ -36,7 +34,6 @@ export default function EditBookPage() {
         setLoading(false);
       }
     })();
-    return () => controller.abort();
   }, [id]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +48,9 @@ export default function EditBookPage() {
         pageCount: Number(pageCount),
         language,
         description,
+        authorId: 9,
+        publisherId: 3,
+        genreIds: [6],
       });
       navigate(`/books/${id}`);
     } catch {

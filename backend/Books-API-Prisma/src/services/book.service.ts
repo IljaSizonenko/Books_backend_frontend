@@ -21,21 +21,36 @@ export class BookService {
         return book;
     }
     static async getAllBooks(query: any) {
+        const clean = (v: any) =>
+            v === "" || v === undefined || v === null ? undefined : v;
         const { page, limit, skip, take } = getPagination(query.page, query.limit);
         const where: any = {};
-        if (query.title) {
+        // Title
+        if (clean(query.title)) {
             where.title = prismaContains(query.title);
         }
-        if (query.language) {
-            where.language = prismaEquals(query.language);
+        // Language FIX — map frontend codes → DB values
+        if (clean(query.language)) {
+            const langMap: Record<string, string> = {
+                en: "English",
+                et: "Estonian",
+                fr: "French",
+                de: "German",
+            };
+            const mapped = langMap[query.language];
+            if (mapped) {
+                where.language = prismaEquals(mapped);
+            }
         }
-        if (query.year) {
+        // Year
+        if (clean(query.year)) {
             const year = Number(query.year);
             if (!isNaN(year)) {
                 where.publishedYear = prismaEquals(year);
             }
         }
-        if (query.author) {
+        // Author
+        if (clean(query.author)) {
             where.author = {
                 OR: [
                     { firstName: prismaContains(query.author) },
@@ -43,13 +58,17 @@ export class BookService {
                 ]
             };
         }
-        if (query.genre) {
+        // Genre
+        if (clean(query.genre)) {
             where.genres = { some: { name: prismaContains(query.genre) } };
         }
-        if (query.publisher) {
+        // Publisher
+        if (clean(query.publisher)) {
             where.publisher = { name: prismaContains(query.publisher) };
         }
-        const orderBy = getSortOptions(query.sortBy, query.order);
+        // Sorting
+        const orderBy = getSortOptions(clean(query.sortBy), clean(query.order));
+        // Prisma queries
         const [totalItems, books] = await Promise.all([
             prisma.book.count({ where }),
             prisma.book.findMany({

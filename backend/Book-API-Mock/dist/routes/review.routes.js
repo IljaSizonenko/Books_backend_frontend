@@ -5,6 +5,6 @@ import { reviewCreateSchema } from "../validators/review.validators.js";
 const router = Router();
 router.get("/:bookId/reviews", ReviewController.getByBook);
 router.post("/:bookId/reviews", validate(reviewCreateSchema), ReviewController.create);
-router.get("/:bookId/average-rating", ReviewController.getAverageRating);
+router.get("/:bookId/reviews/average", ReviewController.getAverageRating);
 export default router;
 //# sourceMappingURL=review.routes.js.map

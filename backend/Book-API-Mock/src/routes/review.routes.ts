@@ -85,5 +85,5 @@ router.post("/:bookId/reviews", validate(reviewCreateSchema), ReviewController.c
  *       404:
  *         description: Book not found
  */
-router.get("/:bookId/average-rating", ReviewController.getAverageRating);
+router.get("/:bookId/reviews/average", ReviewController.getAverageRating);
 export default router

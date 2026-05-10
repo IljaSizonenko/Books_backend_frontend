@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { getBooks, deleteBook } from "../api/api.js";
-import type { Book } from "../api/types.js";
+import type { UnifiedBook } from "../api/types.js";
 import { Link } from "react-router-dom";
 
-// --- Debounce hook ---
 function useDebounce<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -14,7 +13,7 @@ function useDebounce<T>(value: T, delay = 300): T {
   return debounced;
 }
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<UnifiedBook[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 5,
@@ -22,34 +21,32 @@ export default function BooksPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // raw filter inputs
+  // Filters
   const [title, setTitle] = useState("");
   const [year, setYear] = useState("");
   const [language, setLanguage] = useState("");
-  // debounced filter values
-  const debouncedTitle = useDebounce(title, 300);
-  const debouncedYear = useDebounce(year, 300);
-  const debouncedLanguage = useDebounce(language, 300);
-  // sorting
-  const [sortBy, setSortBy] = useState<"title" | "publishedYear" | "">("");
+  const debouncedTitle = useDebounce(title);
+  const debouncedYear = useDebounce(year);
+  const debouncedLanguage = useDebounce(language);
+  // Sorting
+  const [sortBy, setSortBy] = useState("");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
   const { page, limit } = pagination;
-  // --- Fetch books ---
   useEffect(() => {
     const controller = new AbortController();
     (async () => {
       setLoading(true);
       setError("");
       try {
-        const { books, pagination } = await getBooks(
+        const { books, pagination: serverPagination } = await getBooks(
           {
             title: debouncedTitle || undefined,
-            publishedYear:
+            year:
               debouncedYear.trim() === "" || isNaN(Number(debouncedYear))
                 ? undefined
                 : Number(debouncedYear),
             language: debouncedLanguage || undefined,
-            sort: sortBy === "" ? undefined : sortBy,
+            sortBy: sortBy || undefined,
             order,
             page,
             limit,
@@ -59,7 +56,7 @@ export default function BooksPage() {
         setBooks(books);
         setPagination((prev) => ({
           ...prev,
-          total: pagination.total,
+          total: serverPagination.total,
         }));
       } catch (err) {
         if (axios.isCancel(err)) return;
@@ -97,19 +94,28 @@ export default function BooksPage() {
           className="border p-2"
           placeholder="Title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            setPagination((p) => ({ ...p, page: 1 }));
+          }}
         />
         <input
           className="border p-2"
           placeholder="Year"
           type="number"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => {
+            setYear(e.target.value);
+            setPagination((p) => ({ ...p, page: 1 }));
+          }}
         />
         <select
           className="border p-2"
           value={language}
-          onChange={(e) => setLanguage(e.target.value)}
+          onChange={(e) => {
+            setLanguage(e.target.value);
+            setPagination((p) => ({ ...p, page: 1 }));
+          }}
         >
           <option value="">All languages</option>
           <option value="en">EN</option>
@@ -118,7 +124,7 @@ export default function BooksPage() {
           <option value="de">DE</option>
         </select>
       </div>
-      {/* Pagination + Sorting */}
+      {/* Pagination */}
       <div className="flex items-center gap-4 mb-4">
         <button
           className="border px-3 py-1 rounded disabled:opacity-50"
@@ -162,9 +168,10 @@ export default function BooksPage() {
         <select
           className="border p-2"
           value={sortBy}
-          onChange={(e) =>
-            setSortBy(e.target.value as "title" | "publishedYear" | "")
-          }
+          onChange={(e) => {
+            setSortBy(e.target.value);
+            setPagination((p) => ({ ...p, page: 1 }));
+          }}
         >
           <option value="">No sorting</option>
           <option value="title">Title</option>
@@ -173,7 +180,10 @@ export default function BooksPage() {
         <select
           className="border p-2"
           value={order}
-          onChange={(e) => setOrder(e.target.value as "asc" | "desc")}
+          onChange={(e) => {
+            setOrder(e.target.value as "asc" | "desc");
+            setPagination((p) => ({ ...p, page: 1 }));
+          }}
         >
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
@@ -202,17 +212,13 @@ export default function BooksPage() {
                   try {
                     await deleteBook(String(b.id));
                     setBooks((prev) => prev.filter((x) => x.id !== b.id));
-                    setPagination((p) => {
-                      const newTotal = p.total - 1;
-                      const totalPages = Math.ceil(newTotal / p.limit);
-                      if (p.page > totalPages && totalPages > 0) {
-                        return { ...p, total: newTotal, page: totalPages };
-                      }
-                      return { ...p, total: newTotal };
-                    });
+                    setPagination((p) => ({
+                      ...p,
+                      total: p.total - 1,
+                    }));
                   } catch (err) {
-                    console.error("BOOKS ERROR:", err);
-                    setError("Failed to delete book");
+                    console.error("DELETE ERROR:", err);
+                    setError("Failed to load books");
                   }
                 }}
               >

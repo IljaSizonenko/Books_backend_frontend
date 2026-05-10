@@ -1,34 +1,58 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createBook } from "../api/api.js";
-
+import type { CreateBookForm } from "../api/types.js";
+const LANGUAGE_OPTIONS = [
+  { code: "en", label: "English" },
+  { code: "et", label: "Estonian" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+];
 export default function AddBookPage() {
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
-  const [isbn, setIsbn] = useState("");
-  const [publishedYear, setPublishedYear] = useState("");
-  const [pageCount, setPageCount] = useState("");
-  const [language, setLanguage] = useState("");
-  const [description, setDescription] = useState("");
-  const [coverImage, setCoverImage] = useState("");
+
+  const [form, setForm] = useState<CreateBookForm>({
+    title: "",
+    isbn: "",
+    publishedYear: "",
+    pageCount: "",
+    language: "",
+    description: "",
+    coverImage: "",
+    authorId: 9,
+    publisherId: 3,
+    genreIds: [6],
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const update = <K extends keyof CreateBookForm>(
+    field: K,
+    value: CreateBookForm[K]
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
       await createBook({
-        title,
-        isbn,
-        publishedYear: Number(publishedYear),
-        pageCount: Number(pageCount),
-        language,
-        description,
-        coverImage: coverImage || "",
-        authorId: 1,
-        genreIds: [1],
+        title: form.title,
+        isbn: form.isbn,
+        publishedYear: Number(form.publishedYear),
+        pageCount: Number(form.pageCount),
+        language: form.language,
+        description: form.description,
+        coverImage: form.coverImage || undefined,
+        authorId: form.authorId,
+        publisherId: form.publisherId,
+        genreIds: form.genreIds,
       });
+
       navigate("/books");
     } catch (err) {
       console.error("CREATE ERROR:", err);
@@ -48,49 +72,55 @@ export default function AddBookPage() {
         <input
           className="border p-2 w-full"
           placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={form.title}
+          onChange={(e) => update("title", e.target.value)}
           required
         />
         <input
           className="border p-2 w-full"
           placeholder="ISBN"
-          value={isbn}
-          onChange={(e) => setIsbn(e.target.value)}
+          value={form.isbn}
+          onChange={(e) => update("isbn", e.target.value)}
           required
         />
         <input
           className="border p-2 w-full"
           placeholder="Published year"
-          value={publishedYear}
-          onChange={(e) => setPublishedYear(e.target.value)}
+          value={form.publishedYear ?? ""}
+          onChange={(e) => update("publishedYear", e.target.value)}
           required
         />
         <input
           className="border p-2 w-full"
           placeholder="Page count"
-          value={pageCount}
-          onChange={(e) => setPageCount(e.target.value)}
+          value={form.pageCount ?? ""}
+          onChange={(e) => update("pageCount", e.target.value)}
           required
         />
-        <input
+        <select
           className="border p-2 w-full"
-          placeholder="Language"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
+          value={form.language}
+          onChange={(e) => update("language", e.target.value)}
           required
-        />
+        >
+          <option value="">Select language</option>
+          {LANGUAGE_OPTIONS.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label}
+            </option>
+          ))}
+        </select>
         <textarea
           className="border p-2 w-full"
           placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={form.description}
+          onChange={(e) => update("description", e.target.value)}
         />
         <input
           className="border p-2 w-full"
           placeholder="Cover image URL"
-          value={coverImage}
-          onChange={(e) => setCoverImage(e.target.value)}
+          value={form.coverImage ?? ""}
+          onChange={(e) => update("coverImage", e.target.value)}
         />
         <button
           type="submit"
